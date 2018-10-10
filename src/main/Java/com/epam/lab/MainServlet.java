@@ -15,45 +15,48 @@ public class MainServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        states.add("GET");
+        addCookie(req, resp);
+        req.setAttribute("state", "GET");
+        req.setAttribute("amount", getFromCookie(req, resp));
         req.setAttribute("states", states);
-        addCookie(req,resp);
         req.getRequestDispatcher("WEB-INF/jsp/index.jsp").forward(req, resp);
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        states.add("POST");
-        resp.setHeader("Content-type", "text/html");
-        resp.getWriter().write("POST");
-
+        states.add("new state");
+        resp.getWriter().write(getFromCookie(req, resp));
     }
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        states.add("PUT");
-        resp.setHeader("Content-type", "text/html");
-        resp.getWriter().write("PUT");    }
+        if (states.size() != 0) {
+            states.set(states.size() - 1, "updated state");
+        }
+        getFromCookie(req, resp);
+        resp.getWriter().write(getFromCookie(req, resp));
+    }
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         states.clear();
-        resp.setHeader("Content-type", "text/html");
-        resp.getWriter().write("DELETE");
+        getFromCookie(req, resp);
+        resp.getWriter().write(getFromCookie(req, resp));
     }
 
-    private void addCookie(HttpServletRequest req, HttpServletResponse resp){
-        Cookie cookie = new Cookie("amount", Integer.toString(++amount));
-        resp.addCookie(cookie);
+    private void addCookie(HttpServletRequest req, HttpServletResponse resp) {
+        resp.addCookie(new Cookie("amount", Integer.toString(++this.amount)));
+    }
 
+    private String getFromCookie(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         Cookie[] cookies = req.getCookies();
         if (cookies != null) {
             for (int i = 0; i < cookies.length; i++) {
                 if (cookies[i].getName().equals("amount")) {
-                    req.setAttribute("amount", cookies[i].getValue());
-                    break;
+                    return cookies[i].getValue();
                 }
             }
         }
+        return "";
     }
 }
