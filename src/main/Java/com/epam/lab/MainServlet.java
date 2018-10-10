@@ -11,21 +11,26 @@ import java.util.List;
 
 public class MainServlet extends HttpServlet {
     private List<String> states = new ArrayList<>();
-    private int amount = 0;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        addCookie(req, resp);
         req.setAttribute("state", "GET");
-        req.setAttribute("amount", getFromCookie(req, resp));
+        req.setAttribute("amount", getNewCookie(req, resp));
         req.setAttribute("states", states);
-        req.getRequestDispatcher("WEB-INF/jsp/index.jsp").forward(req, resp);
+        if (req.getParameter("clicked") != null) {
+            req.getRequestDispatcher("WEB-INF/jsp/part.jsp").forward(req, resp);
+        } else {
+            req.getRequestDispatcher("WEB-INF/jsp/index.jsp").forward(req, resp);
+        }
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         states.add("new state");
-        resp.getWriter().write(getFromCookie(req, resp));
+        req.setAttribute("state", "POST");
+        req.setAttribute("amount", getFromCookie(req));
+        req.setAttribute("states", states);
+        req.getRequestDispatcher("WEB-INF/jsp/part.jsp").forward(req, resp);
     }
 
     @Override
@@ -33,22 +38,22 @@ public class MainServlet extends HttpServlet {
         if (states.size() != 0) {
             states.set(states.size() - 1, "updated state");
         }
-        getFromCookie(req, resp);
-        resp.getWriter().write(getFromCookie(req, resp));
+        req.setAttribute("state", "PUT");
+        req.setAttribute("amount", getFromCookie(req));
+        req.setAttribute("states", states);
+        req.getRequestDispatcher("WEB-INF/jsp/part.jsp").forward(req, resp);
     }
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         states.clear();
-        getFromCookie(req, resp);
-        resp.getWriter().write(getFromCookie(req, resp));
+        req.setAttribute("state", "DELETE");
+        req.setAttribute("amount", getFromCookie(req));
+        req.setAttribute("states", states);
+        req.getRequestDispatcher("WEB-INF/jsp/part.jsp").forward(req, resp);
     }
 
-    private void addCookie(HttpServletRequest req, HttpServletResponse resp) {
-        resp.addCookie(new Cookie("amount", Integer.toString(++this.amount)));
-    }
-
-    private String getFromCookie(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    private String getFromCookie(HttpServletRequest req) {
         Cookie[] cookies = req.getCookies();
         if (cookies != null) {
             for (int i = 0; i < cookies.length; i++) {
@@ -58,5 +63,12 @@ public class MainServlet extends HttpServlet {
             }
         }
         return "";
+    }
+
+    public String getNewCookie(HttpServletRequest req, HttpServletResponse resp) {
+        String s = getFromCookie(req);
+        int i = Integer.parseInt(s) + 1;
+        resp.addCookie(new Cookie("amount", Integer.toString(i)));
+        return Integer.toString(i);
     }
 }
